@@ -156,6 +156,5 @@ No known bugs at this time.
 ## Authors
 Tinsaye Simeneh - [Github](https://github.com/tinsaye-simeneh) / [Twitter](https://twitter.com/tinsaye_simeneh) 
 
-Second part of Airbnb: Joann Vuong
 ## License
 Public Domain. No copy write protection. 
