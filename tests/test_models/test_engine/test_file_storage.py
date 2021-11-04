@@ -14,7 +14,6 @@ from models.place import Place
 from models.review import Review
 from models.state import State
 from models.user import User
-from models import storage
 import json
 import os
 import pep8
@@ -56,9 +55,9 @@ test_file_storage.py'])
     def test_file_storage_class_docstring(self):
         """Test for the FileStorage class docstring"""
         self.assertIsNot(FileStorage.__doc__, None,
-                         "FileStorage class needs a docstring")
+                         "State class needs a docstring")
         self.assertTrue(len(FileStorage.__doc__) >= 1,
-                        "FileStorage class needs a docstring")
+                        "State class needs a docstring")
 
     def test_fs_func_docstrings(self):
         """Test for the presence of docstrings in FileStorage methods"""
@@ -71,27 +70,9 @@ test_file_storage.py'])
 
 class TestFileStorage(unittest.TestCase):
     """Test the FileStorage class"""
-    def setUp(self):
-        """Set up for the doc tests"""
-        self.state_1 = State(name="EstadoDePrueba")
-        self.state_1.save()
-        self.city_1 = City(name="CiudadDePrueba", state_id=self.state_1.id, )
-        self.city_1.save()
-        self.user_1 = User(email="a@a", password="123")
-        self.user_1.save()
-        self.place_1 = Place(name="Place de prueba 1", city_id=self.city_1.id,
-                             user_id=self.user_1.id, number_rooms=3,
-                             number_bathrooms=2, max_guest=3,
-                             price_by_night=100)
-        self.place_1.save()
-        self.amenity_1 = Amenity(name="Internet")
-        self.amenity_1.save()
-        self.review_1 = Review(text="Review de prueba",
-                               place_id=self.place_1.id,
-                               user_id=self.user_1.id)
-        self.review_1.save()
 
-    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    @unittest.skipIf(os.getenv('HBNB_TYPE_STORAGE') == 'db',
+                     "not testing file storage")
     def test_all_returns_dict(self):
         """Test that all returns the FileStorage.__objects attr"""
         storage = FileStorage()
@@ -99,7 +80,8 @@ class TestFileStorage(unittest.TestCase):
         self.assertEqual(type(new_dict), dict)
         self.assertIs(new_dict, storage._FileStorage__objects)
 
-    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    @unittest.skipIf(os.getenv('HBNB_TYPE_STORAGE') == 'db',
+                     "not testing file storage")
     def test_new(self):
         """test that new adds an object to the FileStorage.__objects attr"""
         storage = FileStorage()
@@ -115,7 +97,8 @@ class TestFileStorage(unittest.TestCase):
                 self.assertEqual(test_dict, storage._FileStorage__objects)
         FileStorage._FileStorage__objects = save
 
-    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    @unittest.skipIf(os.getenv('HBNB_TYPE_STORAGE') == 'db',
+                     "not testing file storage")
     def test_save(self):
         """Test that save properly saves objects to file.json"""
         storage = FileStorage()
@@ -135,118 +118,26 @@ class TestFileStorage(unittest.TestCase):
             js = f.read()
         self.assertEqual(json.loads(string), json.loads(js))
 
-    @unittest.skipIf(models.storage_t == 'db', "not testing db storage")
-    def test_count_all(self):
-        """Tests if returns the right quantity of elements"""
-        num_objs = storage.count()
-        new_obj = State(name="EstadoDePrueba 2")
-        new_obj.save()
-        new_num_objs = storage.count()
-        self.assertEqual(num_objs, new_num_objs - 1, "Count not equal")
+    @unittest.skipIf(os.getenv('HBNB_TYPE_STORAGE') == 'db',
+                     "not testing file storage")
+    def test_get(self):
+        """Test that the get method properly retrievs objects"""
+        storage = FileStorage()
+        self.assertIs(storage.get("User", "blah"), None)
+        self.assertIs(storage.get("blah", "blah"), None)
+        new_user = User()
+        new_user.save()
+        self.assertIs(storage.get("User", new_user.id), new_user)
 
-    @unittest.skipIf(models.storage_t == 'db', "not testing db storage")
-    def test_count_state(self):
-        """Tests if returns the right quantity of elements"""
-        num_objs = storage.count(State)
-        new_obj = State(name="EstadoDePrueba")
-        new_obj.save()
-        new_num_objs = storage.count(State)
-        self.assertEqual(num_objs, new_num_objs - 1, "Count not equal")
-
-    @unittest.skipIf(models.storage_t == 'db', "not testing db storage")
-    def test_count_city(self):
-        """Tests if returns the right quantity of elements"""
-        num_objs = storage.count(City)
-        new_obj = City(name="CiudadDePrueba", state_id=self.state_1.id)
-        new_obj.save()
-        new_num_objs = storage.count(City)
-        self.assertEqual(num_objs, new_num_objs - 1, "Count not equal")
-
-    @unittest.skipIf(models.storage_t == 'db', "not testing db storage")
-    def test_count_amenity(self):
-        """Tests if returns the right quantity of elements"""
-        num_objs = storage.count(Amenity)
-        new_obj = Amenity(name="WiFi")
-        new_obj.save()
-        new_num_objs = storage.count(Amenity)
-        self.assertEqual(num_objs, new_num_objs - 1, "Count not equal")
-
-    @unittest.skipIf(models.storage_t == 'db', "not testing db storage")
-    def test_count_review(self):
-        """Tests if returns the right quantity of elements"""
-        num_objs = storage.count(Review)
-        new_obj = Review(text="Review prueba", user_id=self.user_1.id,
-                         place_id=self.place_1.id)
-        new_obj.save()
-        new_num_objs = storage.count(Review)
-        self.assertEqual(num_objs, new_num_objs - 1, "Count not equal")
-
-    @unittest.skipIf(models.storage_t == 'db', "not testing db storage")
-    def test_count_place(self):
-        """Tests if returns the right quantity of elements"""
-        num_objs = storage.count(Place)
-        new_obj = Place(name="Place De Prueba", city_id=self.city_1.id,
-                        user_id=self.user_1.id, number_rooms=3,
-                        number_bathrooms=1, max_guest=5,
-                        price_by_night=150)
-        new_obj.save()
-        new_num_objs = storage.count(Place)
-        self.assertEqual(num_objs, new_num_objs - 1, "Count not equal")
-
-    @unittest.skipIf(models.storage_t == 'db', "not testing db storage")
-    def test_count_user(self):
-        """Tests if returns the right quantity of elements"""
-        num_objs = storage.count(User)
-        new_obj = User(name="User de prueba", email="b@b", password="abc")
-        new_obj.save()
-        new_num_objs = storage.count(User)
-        self.assertEqual(num_objs, new_num_objs - 1, "Count not equal")
-
-    @unittest.skipIf(models.storage_t == 'db', "not testing db storage")
-    def test_get_state(self):
-        """Tests if returns the right obj with the given id"""
-        first_state_obj = list(storage.all(State).values())[0]
-        first_state_id = first_state_obj.id
-        obj = storage.get(State, first_state_id)
-        self.assertIs(first_state_obj, obj, "Obj retrieved is not right")
-
-    @unittest.skipIf(models.storage_t == 'db', "not testing db storage")
-    def test_get_city(self):
-        """Tests if returns the right obj with the given id"""
-        first_city_obj = list(storage.all(City).values())[0]
-        first_city_id = first_city_obj.id
-
-        obj = storage.get(City, first_city_id)
-        self.assertIs(first_city_obj, obj, "Obj retrieved is not right")
-
-    @unittest.skipIf(models.storage_t == 'db', "not testing db storage")
-    def test_get_amenity(self):
-        """Tests if returns the right obj with the given id"""
-        first_amenity_obj = list(storage.all(Amenity).values())[0]
-        first_amenity_id = first_amenity_obj.id
-        obj = storage.get(Amenity, first_amenity_id)
-        self.assertIs(first_amenity_obj, obj, "Obj retrieved is not right")
-
-    @unittest.skipIf(models.storage_t == 'db', "not testing db storage")
-    def test_get_review(self):
-        """Tests if returns the right obj with the given id"""
-        first_review_obj = list(storage.all(Review).values())[0]
-        first_review_id = first_review_obj.id
-        obj = storage.get(Review, first_review_id)
-        self.assertIs(first_review_obj, obj, "Obj retrieved is not right")
-
-    @unittest.skipIf(models.storage_t == 'db', "not testing db storage")
-    def test_get_place(self):
-        """Tests if returns the right obj with the given id"""
-        first_place_obj = list(storage.all(Place).values())[0]
-        first_place_id = first_place_obj.id
-        obj = storage.get(Place, first_place_id)
-        self.assertIs(first_place_obj, obj, "Obj retrieved is not right")
-
-    @unittest.skipIf(models.storage_t == 'db', "not testing db storage")
-    def test_get_user(self):
-        """Tests if returns the right obj with the given id"""
-        first_user_obj = list(storage.all(User).values())[0]
-        first_user_id = first_user_obj.id
-        obj = storage.get(User, first_user_id)
-        self.assertIs(first_user_obj, obj, "Obj retrieved is not right")
+    @unittest.skipIf(os.getenv('HBNB_TYPE_STORAGE') == 'db',
+                     "not testing file storage")
+    def test_count(self):
+        storage = FileStorage()
+        initial_length = len(storage.all())
+        self.assertEqual(storage.count(), initial_length)
+        state_len = len(storage.all("State"))
+        self.assertEqual(storage.count("State"), state_len)
+        new_state = State()
+        new_state.save()
+        self.assertEqual(storage.count(), initial_length + 1)
+        self.assertEqual(storage.count("State"), state_len + 1)
